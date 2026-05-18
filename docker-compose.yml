@@ -32,11 +32,7 @@ services:
       - frontend
     env_file: .env
     ports:
-      - 8000:80
-      - 443:443
-
+      - 80:80
     volumes:
       - static:/static
       - media:/media
-      - /etc/letsencrypt/:/etc/letsencrypt/:ro
-
