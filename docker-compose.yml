@@ -28,6 +28,7 @@ services:
   gateway:
     image: sadmitriev/foodgram_gateway
     depends_on:
+      - backend
       - frontend
     env_file: .env
     ports:
