@@ -26,7 +26,7 @@ services:
     volumes:
       - static:/static
   gateway:
-    image: sadmitriev/foodgram_gateway
+    image: sadmitriev/foodgram_nginx
     depends_on:
       - backend
       - frontend
@@ -37,3 +37,4 @@ services:
     volumes:
       - static:/static
       - media:/media
+      - /etc/letsencrypt/:/etc/letsencrypt/:ro
