@@ -1,5 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from recipes.constants import (MAX_AMOUNT_VALUE, MAX_TIME_COOK_VALUE,
                                MIN_AMOUNT_VALUE, MIN_TIME_COOK_VALUE,
                                SIZE_INGREDIENT_NAME_FIELD,
@@ -124,8 +125,7 @@ class RecipeIngredient(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
-                name='unique_recipe_ingredient')
-        ]
+                name='unique_recipe_ingredient'),]
         indexes = [models.Index(fields=['recipe', 'ingredient']),]
 
     def __str__(self):
@@ -158,9 +158,8 @@ class Favorite(models.Model):
                 name='unique_favorite')]
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-        indexes = [
-            models.Index(fields=['user']),
-            models.Index(fields=['recipe']),]
+        indexes = [models.Index(fields=['user']),
+                   models.Index(fields=['recipe'])]
 
     def __str__(self):
         """Магический метод __str__."""
@@ -191,8 +190,7 @@ class ShoppingCart(models.Model):
                 name='unique_shopping_cart')]
         verbose_name = 'Для покупок'
         verbose_name_plural = 'Для покупок'
-        indexes = [
-            models.Index(fields=['user']),]
+        indexes = [models.Index(fields=['user'])]
 
     def __str__(self):
         """Магический метод __str__."""

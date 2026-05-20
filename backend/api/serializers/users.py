@@ -1,9 +1,10 @@
-from api.fields import Base64ImageField
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from drf_spectacular.utils import extend_schema_field
-from recipes.models import Recipe
 from rest_framework import serializers
+
+from api.fields import Base64ImageField
+from recipes.models import Recipe
 from users.models import Subscription
 
 User = get_user_model()

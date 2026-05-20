@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+
 from recipes.constants import (SIZE_EMAIL_FIELD, SIZE_FIRSTNAME_FIELD,
                                SIZE_LASTNAME_FIELD, SIZE_TEXT_FIELD,
                                SIZE_USERNAME_FIELD)
@@ -76,7 +77,7 @@ class Subscription(models.Model):
                 name='prevent_self_subscription')]
 
         indexes = [models.Index(fields=['user']),
-                   models.Index(fields=['author']),]
+                   models.Index(fields=['author'])]
 
     def __str__(self):
         """Магический метод __str__."""
