@@ -1,4 +1,4 @@
-[![Main Kittygram workflow](https://github.com/Sergey-A-Dmitriev/kittygram_final/actions/workflows/main.yml/badge.svg)](https://github.com/Sergey-A-Dmitriev/kittygram_final/actions/workflows/main.yml)
+[![Main Foodgram workflow](https://github.com/Sergey-A-Dmitriev/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/Sergey-A-Dmitriev/foodgram/actions/workflows/main.yml)
 
 # Foodgram + API
 
