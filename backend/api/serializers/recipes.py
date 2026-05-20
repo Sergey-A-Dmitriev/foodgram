@@ -1,11 +1,10 @@
-from drf_spectacular.utils import extend_schema_field
-from rest_framework import serializers
-
 from api.fields import Base64ImageField
 from api.serializers.users import UserSerializer
+from drf_spectacular.utils import extend_schema_field
 from recipes.constants import MAX_AMOUNT_VALUE, MIN_AMOUNT_VALUE
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
+from rest_framework import serializers
 
 
 class TagSerializer(serializers.ModelSerializer):

@@ -1,7 +1,6 @@
-from rest_framework import serializers
-
 from api.mixins import RepresentationMixin
 from recipes.models import Favorite, ShoppingCart
+from rest_framework import serializers
 
 
 class FavoriteSerializer(RepresentationMixin, serializers.ModelSerializer):
