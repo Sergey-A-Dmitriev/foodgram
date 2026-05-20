@@ -92,7 +92,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
         ordering = ['-created_at']
         indexes = [models.Index(fields=['author', '-created_at']),
-                   models.Index(fields=['-created_at']),]
+                   models.Index(fields=['-created_at'])]
 
     def __str__(self):
         """Магический метод __str__."""
@@ -125,8 +125,8 @@ class RecipeIngredient(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
-                name='unique_recipe_ingredient'),]
-        indexes = [models.Index(fields=['recipe', 'ingredient']),]
+                name='unique_recipe_ingredient')]
+        indexes = [models.Index(fields=['recipe', 'ingredient'])]
 
     def __str__(self):
         """Магический метод __str__."""
