@@ -1,12 +1,9 @@
-from api.serializers.users import ShortRecipeSerializer
+from django.contrib import admin
 
 
-class RepresentationMixin:
-    """Миксин to_representation."""
+class RecipesCountMixin:
+    """Миксин для подсчёта рецептов."""
 
-    def to_representation(self, instance):
-        """Возвращает краткую информацию о рецепте."""
-        return ShortRecipeSerializer(
-            instance.recipe,
-            context={'request': self.context.get('request')}
-        ).data
+    @admin.display(description='Количество рецептов')
+    def get_recipes_count(self, recipes):
+        return recipes.recipes.count()

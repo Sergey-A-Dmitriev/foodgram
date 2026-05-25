@@ -1,12 +1,88 @@
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from recipes.constants import (MAX_AMOUNT_VALUE, MAX_TIME_COOK_VALUE,
-                               MIN_AMOUNT_VALUE, MIN_TIME_COOK_VALUE,
-                               SIZE_INGREDIENT_NAME_FIELD,
+from recipes.constants import (MIN_AMOUNT_VALUE, MIN_TIME_COOK_VALUE,
+                               SIZE_EMAIL_FIELD, SIZE_FIRSTNAME_FIELD,
+                               SIZE_INGREDIENT_NAME_FIELD, SIZE_LASTNAME_FIELD,
                                SIZE_RECIPE_NAME_FIELD, SIZE_TAG_FIELDS,
-                               SIZE_TEXT_FIELD, SIZE_UNIT_FIELD)
-from users.models import User
+                               SIZE_TEXT_FIELD, SIZE_UNIT_FIELD,
+                               SIZE_USERNAME_FIELD)
+
+
+class User(AbstractUser):
+    """Кастомная модель пользователя."""
+
+    email = models.EmailField(
+        unique=True,
+        verbose_name='Электронная почта',
+        max_length=SIZE_EMAIL_FIELD)
+    username = models.CharField(
+        max_length=SIZE_USERNAME_FIELD,
+        unique=True,
+        validators=[UnicodeUsernameValidator()],
+        verbose_name='Юзернейм')
+    first_name = models.CharField(
+        max_length=SIZE_FIRSTNAME_FIELD,
+        verbose_name='Имя')
+    last_name = models.CharField(
+        max_length=SIZE_LASTNAME_FIELD,
+        verbose_name='Фамилия')
+    avatar = models.ImageField(
+        upload_to='avatars/',
+        blank=True,
+        null=True,
+        verbose_name='Ссылка на аватар')
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
+    class Meta:
+        """Служебный класс."""
+
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('username',)
+
+    def __str__(self):
+        """Магический метод __str__."""
+        return self.username[:SIZE_TEXT_FIELD]
+
+
+class Subscription(models.Model):
+    """Модель Подписки."""
+
+    user = models.ForeignKey(
+        User,
+        related_name='subscriptions',
+        on_delete=models.CASCADE,
+        verbose_name='Подписчик')
+
+    author = models.ForeignKey(
+        User,
+        related_name='subscriptions_as_author',
+        on_delete=models.CASCADE,
+        verbose_name='Автор')
+
+    class Meta:
+        """Служебный класс."""
+
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscription'),
+
+            models.CheckConstraint(
+                condition=~models.Q(user=models.F('author')),
+                name='prevent_self_subscription')]
+
+    def __str__(self):
+        """Магический метод __str__."""
+        return f'{self.user} подписан на {self.author}'[:SIZE_TEXT_FIELD]
 
 
 class Tag(models.Model):
@@ -15,11 +91,11 @@ class Tag(models.Model):
     name = models.CharField(
         max_length=SIZE_TAG_FIELDS,
         unique=True,
-        verbose_name='Уникальное название')
+        verbose_name='Название')
     slug = models.SlugField(
         max_length=SIZE_TAG_FIELDS,
         unique=True,
-        verbose_name='Уникальный слаг')
+        verbose_name='slug')
 
     class Meta:
         """Служебный класс."""
@@ -34,12 +110,12 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Модель Ингредиенты."""
+    """Модель Продукты."""
 
     name = models.CharField(
         max_length=SIZE_INGREDIENT_NAME_FIELD,
         unique=True,
-        verbose_name='Название ингредиента')
+        verbose_name='Название продукта')
     measurement_unit = models.CharField(
         max_length=SIZE_UNIT_FIELD,
         verbose_name='Единица измерения')
@@ -47,8 +123,8 @@ class Ingredient(models.Model):
     class Meta:
         """Служебный класс."""
 
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
+        verbose_name = 'Продукт'
+        verbose_name_plural = 'Продукты'
         ordering = ['name']
 
     def __str__(self):
@@ -70,8 +146,7 @@ class Recipe(models.Model):
         verbose_name='Описание')
     cooking_time = models.PositiveSmallIntegerField(
         help_text='Время в минутах',
-        validators=[MinValueValidator(MIN_TIME_COOK_VALUE),
-                    MaxValueValidator(MAX_TIME_COOK_VALUE)],
+        validators=[MinValueValidator(MIN_TIME_COOK_VALUE)],
         verbose_name='Время приготовления (мин)')
     image = models.ImageField(
         upload_to='images/',
@@ -91,8 +166,6 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ['-created_at']
-        indexes = [models.Index(fields=['author', '-created_at']),
-                   models.Index(fields=['-created_at'])]
 
     def __str__(self):
         """Магический метод __str__."""
@@ -105,28 +178,25 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe_ingredients',
         verbose_name='Рецепт')
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='ingredient_recipes',
         verbose_name='Ингредиент')
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(MIN_AMOUNT_VALUE),
-                    MaxValueValidator(MAX_AMOUNT_VALUE)],
+        validators=[MinValueValidator(MIN_AMOUNT_VALUE)],
         verbose_name='Количество')
 
     class Meta:
         """Служебный класс."""
 
+        default_related_name = 'recipe_ingredients'
         verbose_name = 'Количество ингредиента'
         verbose_name_plural = 'Количество ингредиентов'
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
                 name='unique_recipe_ingredient')]
-        indexes = [models.Index(fields=['recipe', 'ingredient'])]
 
     def __str__(self):
         """Магический метод __str__."""
@@ -136,8 +206,8 @@ class RecipeIngredient(models.Model):
                 f'{self.ingredient.name}')[:SIZE_TEXT_FIELD]
 
 
-class Favorite(models.Model):
-    """Модель Избранное."""
+class UserRecipeBaseModel(models.Model):
+    """Базовая модель."""
 
     user = models.ForeignKey(
         User,
@@ -147,6 +217,19 @@ class Favorite(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт')
+
+    class Meta:
+        """Служебный класс."""
+
+        abstract = True
+
+    def __str__(self):
+        """Магический метод __str__."""
+        return f'{self.user.username} → {self.recipe.name}'[:SIZE_TEXT_FIELD]
+
+
+class Favorite(UserRecipeBaseModel):
+    """Модель Избранное."""
 
     class Meta:
         """Служебный класс."""
@@ -158,27 +241,10 @@ class Favorite(models.Model):
                 name='unique_favorite')]
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-        indexes = [models.Index(fields=['user']),
-                   models.Index(fields=['recipe'])]
-
-    def __str__(self):
-        """Магический метод __str__."""
-        return f'{self.user.username} → {self.recipe.name}'[:SIZE_TEXT_FIELD]
 
 
-class ShoppingCart(models.Model):
+class ShoppingCart(UserRecipeBaseModel):
     """Модель Список покупок."""
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping_carts',
-        verbose_name='Пользователь')
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='shopping_carts',
-        verbose_name='Рецепт')
 
     class Meta:
         """Служебный класс."""
@@ -190,8 +256,3 @@ class ShoppingCart(models.Model):
                 name='unique_shopping_cart')]
         verbose_name = 'Для покупок'
         verbose_name_plural = 'Для покупок'
-        indexes = [models.Index(fields=['user'])]
-
-    def __str__(self):
-        """Магический метод __str__."""
-        return f'{self.user.username} → {self.recipe.name}'[:SIZE_TEXT_FIELD]

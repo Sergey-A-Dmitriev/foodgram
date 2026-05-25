@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     'django_filters',
     'djoser',
     'corsheaders',
-    'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
 ]
 
@@ -46,16 +46,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'foodgram.urls'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-]
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000',]
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://158.160.251.106:8000',
-    'http://localhost:8000',
-    'https://foodgramer.ru',
-    'https://www.foodgramer.ru',
-]
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED', 'http://localhost:8000').split(',')
 
 TEMPLATES = [
     {
@@ -81,7 +74,7 @@ if USE_SQLITE:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': '/data/db.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
@@ -96,7 +89,7 @@ else:
         }
     }
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'recipes.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -126,11 +119,18 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    'USER_VIEWSET': 'users.views.UserViewSet',
     'SERIALIZERS': {
         'user': 'api.serializers.users.UserSerializer',
         'current_user': 'api.serializers.users.UserSerializer',
         'user_create': 'api.serializers.users.UserCreateSerializer',
     },
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.AllowAny'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+        'current_user': ['rest_framework.permissions.IsAuthenticated'],
+        'set_password': ['rest_framework.permissions.IsAuthenticated'],
+    }
 }
 
 SPECTACULAR_SETTINGS = {
@@ -141,7 +141,7 @@ SPECTACULAR_SETTINGS = {
 }
 LANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Yekaterinburg'
 
 USE_I18N = True
 
