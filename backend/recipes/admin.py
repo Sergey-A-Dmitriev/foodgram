@@ -39,7 +39,9 @@ class UserAdmin(RecipesCountMixin, UserAdmin):
     def get_avatar(self, account):
         if account.avatar:
             return format_html(
-                '<img src="{}" width="50" height="50" style="border-radius:50%;" />',
+                ('<img src="{}" '
+                 'width="50" height="50" '
+                 'style="border-radius:50%;" />'),
                 account.avatar.url)
         return '—'
 
@@ -50,6 +52,7 @@ class UserAdmin(RecipesCountMixin, UserAdmin):
     @admin.display(description='Подписчики')
     def get_followers_count(self, account):
         return account.subscriptions_as_author.count()
+
 
 @admin.register(Tag)
 class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
@@ -123,7 +126,9 @@ class RecipeAdmin(admin.ModelAdmin):
     def get_image(self, recipe):
         if recipe.image:
             return format_html(
-                '<img src="{}" width="80" height="80" style="border-radius:8px;" />',
+                ('<img src="{}" '
+                 'width="80" height="80" '
+                 'style="border-radius:8px;" />'),
                 recipe.image.url)
         return '—'
 
@@ -132,6 +137,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return format_html(
             '{}',
             ', '.join(tag.name for tag in recipe.tags.all()))
+
 
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):

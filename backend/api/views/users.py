@@ -9,8 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.serializers.users import (AvatarSerializer,
-                                   SubscriptionAuthorSerializer,
-                                   UserCreateSerializer, UserSerializer)
+                                   SubscriptionAuthorSerializer)
 from recipes.models import Subscription
 
 User = get_user_model()

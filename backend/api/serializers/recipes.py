@@ -94,7 +94,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, recipe):
         return self._is_relation_exists(recipe, 'favorites')
 
-
     @extend_schema_field(serializers.BooleanField)
     def get_is_in_shopping_cart(self, recipe):
         return self._is_relation_exists(recipe, 'shopping_carts')

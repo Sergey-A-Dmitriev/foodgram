@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
 from djoser.serializers import (
     UserCreateSerializer as DjoserUserCreateSerializer)
 from djoser.serializers import UserSerializer as DjoserUserSerializer

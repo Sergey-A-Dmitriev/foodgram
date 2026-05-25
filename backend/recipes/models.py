@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from recipes.constants import (MIN_AMOUNT_VALUE, MIN_TIME_COOK_VALUE,
