@@ -128,6 +128,14 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "docker-compose.yml"
           target: "foodgram"
+      - name: Copy schema.yaml via ssh
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "schema.yaml"
+          target: "foodgram"
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
