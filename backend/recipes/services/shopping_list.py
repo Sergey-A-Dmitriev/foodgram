@@ -29,4 +29,4 @@ def generate_shopping_list(user, ingredients_qs):
         *product_lines,
         '',
         'Рецепты:',
-        *sorted(recipe_lines),])
+        *sorted(recipe_lines)])
