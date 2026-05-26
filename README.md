@@ -305,11 +305,11 @@ GET /api/ingredients/{id}/
 ```
 
 ## Проект доступен на ресурсах:
-Развернут на учебной виртуальной машине 158.160.251.106
-Доступен по адресам:
-[https://foodgramer.ru](https://foodgramer.ru)
-[https://www.foodgramer.ru](https://www.foodgramer.ru)
-[http://foodgramer.ru](http://foodgramer.ru)
+Развернут на учебной виртуальной машине 158.160.251.106  
+Доступен по адресам:  
+[https://foodgramer.ru](https://foodgramer.ru)  
+[https://www.foodgramer.ru](https://www.foodgramer.ru)  
+[http://foodgramer.ru](http://foodgramer.ru)  
 
 
 ## Панель администратора единая, доступна по адресу:

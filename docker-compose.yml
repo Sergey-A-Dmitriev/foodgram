@@ -14,6 +14,8 @@ services:
     depends_on:
       - db
     env_file: .env
+    context: .
+    dockerfile: ./backend/Dockerfile
     volumes:
       - static:/backend_static
       - media:/app/media
