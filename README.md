@@ -115,7 +115,7 @@
 ```bash
 
 git clone https://github.com/Sergey-A-Dmitriev/foodgram.git
-cd <название_директории_проекта>
+cd foodgram
 ```
 
 **Создание и активация виртуального окружения:**
@@ -149,6 +149,13 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
+**Загрузка основных справочников (продукты и теги):**
+
+```bash
+python manage.py load_ingedients
+python manage.py load_tags
+```
+
 **Запуск сервера:**
 
 ```bash
@@ -156,7 +163,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Сервер будет доступен по адресу `http://127.0.0.1:8000/.`
+Сервер будет доступен по адресу [локальный сервер](http://127.0.0.1:8000/)
 
 ## Примеры использования API
 
@@ -300,10 +307,20 @@ GET /api/ingredients/{id}/
 ## Проект доступен на ресурсах:
 Развернут на учебной виртуальной машине 158.160.251.106
 Доступен по адресам:
-https://foodgramer.ru
-https://www.foodgramer.ru
-http://foodgramer.ru
+[https://foodgramer.ru](https://foodgramer.ru)
+[https://www.foodgramer.ru](https://www.foodgramer.ru)
+[http://foodgramer.ru](http://foodgramer.ru)
+
+
+## Панель администратора единая, доступна по адресу:
+
+[https://foodgramer.ru/admin/](https://foodgramer.ru/admin/)    
+
 
 ## Автор
 
 [Дмитриев Сергей](https://github.com/Sergey-A-Dmitriev)
+
+## Контакты
+
+Email: [sadmitriev@mail.ru](mailto:sadmitriev@mail.ru)

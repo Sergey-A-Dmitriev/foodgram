@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 
 from api.serializers.users import (AvatarSerializer,
                                    SubscriptionAuthorSerializer)
@@ -57,7 +57,7 @@ class UserViewSet(DjoserUserViewSet):
             url_name='reset_email_confirm')
     def reset_email_confirm(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
+
     @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
@@ -65,7 +65,7 @@ class UserViewSet(DjoserUserViewSet):
             url_name='reset_password')
     def reset_password(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
+
     @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
