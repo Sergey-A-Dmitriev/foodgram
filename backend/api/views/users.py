@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from api.serializers.users import (AvatarSerializer,
                                    SubscriptionAuthorSerializer)
@@ -25,6 +26,7 @@ class UserViewSet(DjoserUserViewSet):
         return User.objects.annotate(
             recipes_count=Count('recipes'))
 
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='activation',
@@ -32,6 +34,7 @@ class UserViewSet(DjoserUserViewSet):
     def activation(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='resend_activation',
@@ -39,6 +42,7 @@ class UserViewSet(DjoserUserViewSet):
     def resend_activation(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='reset_email',
@@ -46,20 +50,23 @@ class UserViewSet(DjoserUserViewSet):
     def reset_email(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='reset_email_confirm',
             url_name='reset_email_confirm')
     def reset_email_confirm(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
+    
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='reset_password',
             url_name='reset_password')
     def reset_password(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
+    
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='reset_password_confirm',
@@ -67,6 +74,7 @@ class UserViewSet(DjoserUserViewSet):
     def reset_password_confirm(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @extend_schema(exclude=True)
     @action(methods=['post'],
             detail=False,
             url_path='set_email',
