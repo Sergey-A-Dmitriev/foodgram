@@ -4,5 +4,5 @@ RUN pip install gunicorn==25.3.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 COPY . .
-COPY data/ /data/
+COPY data/ /backend/data/
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram.wsgi"] 
