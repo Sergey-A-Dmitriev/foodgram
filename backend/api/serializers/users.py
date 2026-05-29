@@ -14,6 +14,7 @@ class UserSerializer(DjoserUserSerializer):
     """Основной сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
+    avatar = serializers.ImageField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
         fields = (
