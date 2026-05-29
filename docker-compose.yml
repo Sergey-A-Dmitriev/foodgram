@@ -22,7 +22,7 @@ services:
     image: sadmitriev/foodgram_frontend
     depends_on:
       - backend
-    command: cp -r /app/build/. /static/
+    command: cp -r /app/build/. /
     volumes:
       - static:/static
   gateway:
