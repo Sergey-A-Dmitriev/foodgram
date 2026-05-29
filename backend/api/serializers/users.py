@@ -20,6 +20,7 @@ class UserSerializer(DjoserUserSerializer):
         fields = (
             *DjoserUserSerializer.Meta.fields,
             'is_subscribed',
+            'avatar'
         )
         read_only_fields = fields
 
