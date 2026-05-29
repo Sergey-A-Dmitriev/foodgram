@@ -49,7 +49,7 @@ unwanted_routes = [
     "reset_email_confirm/",
     "activation/",
     "reset_password/",
-    "reset_password_confirm/",]
+    "reset_password_confirm/"]
 
 filtered_user_urls = filter_djoser_urls(
     users_router.urls,
@@ -58,4 +58,4 @@ filtered_user_urls = filter_djoser_urls(
 urlpatterns = [
     path('', include(filtered_user_urls)),
     path('', include(router.urls)),
-    path('auth/', include('djoser.urls.authtoken')),]
+    path('auth/', include('djoser.urls.authtoken'))]
