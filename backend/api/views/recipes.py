@@ -1,7 +1,5 @@
-from io import BytesIO
-
-from django.db.models import Prefetch, Sum
-from django.http import FileResponse
+from django.db.models import Sum
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,15 +9,14 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from rest_framework.viewsets import (ModelViewSet,
-                                     ReadOnlyModelViewSet)
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from api.filters import IngredientSearchFilter, RecipeFilter
 from api.permissions import IsAuthorOrReadOnly
+from api.serializers.common import ShortRecipeSerializer
 from api.serializers.recipes import (IngredientSerializer,
                                      RecipeReadSerializer,
                                      RecipeWriteSerializer, TagSerializer)
-from api.serializers.users import ShortRecipeSerializer
+from recipes.filters import IngredientSearchFilter, RecipeFilter
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from recipes.services.shopping_list import generate_shopping_list
@@ -35,7 +32,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
-    """ViewSet для чтения ингредиентов."""
+    """ViewSet для чтения продуктов."""
 
     all_ingredients = Ingredient.objects.all()
     queryset = all_ingredients
@@ -49,10 +46,9 @@ class RecipeViewSet(ModelViewSet):
     """ViewSet для рецептов."""
 
     queryset = Recipe.objects.all().prefetch_related(
-        Prefetch('favorites',
-                 queryset=Favorite.objects.only('user_id', 'recipe_id')),
-        Prefetch('shopping_carts',
-                 queryset=ShoppingCart.objects.only('user_id', 'recipe_id')),)
+        'favorites',
+        'shopping_carts',
+    )
 
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -135,9 +131,9 @@ class RecipeViewSet(ModelViewSet):
             ingredients_qs=ingredients)
 
         return FileResponse(
-            BytesIO(content.encode()),
+            content,
             as_attachment=True,
-            filename='shopping_cart.txt',
+            filename='shopping_list.txt',
             content_type='text/plain')
 
     @action(
@@ -146,12 +142,13 @@ class RecipeViewSet(ModelViewSet):
         url_path='get-link',
         url_name='short-link')
     def get_link(self, request, pk=None):
-        """Получение короткой ссылки на рецепт."""
+        """Получение ссылки на рецепт."""
 
-        get_object_or_404(Recipe, pk=pk)
-
-        short_url = request.build_absolute_uri(
-            reverse('recipes-detail', kwargs={'pk': pk}))
+        if not Recipe.objects.filter(pk=pk).exists():
+            raise Http404
 
         return Response({
-            'short-link': short_url})
+            'short-link': request.build_absolute_uri(
+                reverse('recipes-detail', args=[pk])
+            )
+        })

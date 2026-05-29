@@ -1,11 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from api.filters import (CookingTimeFilter, HasFollowersFilter,
-                         HasRecipesFilter, HasSubscriptionsFilter)
-from api.mixins import RecipesCountMixin
+from recipes.filters import (CookingTimeFilter, HasFollowersFilter,
+                             HasRecipesFilter, HasSubscriptionsFilter)
+from recipes.mixins import RecipesCountMixin
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Subscription, Tag, User)
 
@@ -22,7 +21,7 @@ class UserAdmin(RecipesCountMixin, UserAdmin):
     """Регистрация кастомной модели User."""
 
     list_display = ('id', 'username', 'get_full_name', 'email', 'get_avatar',
-                    'get_recipes_count', 'get_subscriptions_count',
+                    *RecipesCountMixin.list_display, 'get_subscriptions_count',
                     'get_followers_count')
     list_filter = ('is_staff', 'is_superuser', 'is_active',
                    HasRecipesFilter, HasSubscriptionsFilter,
@@ -36,13 +35,12 @@ class UserAdmin(RecipesCountMixin, UserAdmin):
         return f'{account.first_name} {account.last_name}'
 
     @admin.display(description='Аватар')
+    @mark_safe
     def get_avatar(self, account):
         if account.avatar:
-            return format_html(
-                ('<img src="{}" '
-                 'width="50" height="50" '
-                 'style="border-radius:50%;" />'),
-                account.avatar.url)
+            return (f'<img src="{account.avatar.url}" '
+                    'width="50" height="50" '
+                    'style="border-radius:50%;" />')
         return '—'
 
     @admin.display(description='Подписки')
@@ -51,27 +49,30 @@ class UserAdmin(RecipesCountMixin, UserAdmin):
 
     @admin.display(description='Подписчики')
     def get_followers_count(self, account):
-        return account.subscriptions_as_author.count()
+        return account.author_subscriptions.count()
 
 
 @admin.register(Tag)
 class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация модели Tag."""
 
-    list_display = ('id', 'name', 'slug', 'get_recipes_count')
+    list_display = ('id', 'name', 'slug',
+                    *RecipesCountMixin.list_display)
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name', 'slug')
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    """Регистрация модели Ингредиент."""
+    """Регистрация модели Ingredient."""
 
-    list_display = ('id', 'name', 'measurement_unit', 'get_recipes_count')
-    list_filter = ('measurement_unit',)
-    search_fields = ('name',)
+    list_display = ('id', 'name', 'measurement_unit',
+                    'get_recipes_count')
+    list_filter = ('measurement_unit',
+                   ('recipe_ingredients', admin.EmptyFieldListFilter))
+    search_fields = ('name', 'measurement_unit')
 
-    @admin.display(description='Количество рецептов')
+    @admin.display(description='Рецептов')
     def get_recipes_count(self, ingredient):
         return (Recipe.objects.filter(
             recipe_ingredients__ingredient=ingredient).count())
@@ -114,29 +115,28 @@ class RecipeAdmin(admin.ModelAdmin):
         return recipes.favorites.count()
 
     @admin.display(description='Продукты')
+    @mark_safe
     def get_ingredients(self, recipe):
-        return mark_safe(
-            '<br>'.join(
-                f'{ri.ingredient.name} — {ri.amount} '
-                f'{ri.ingredient.measurement_unit}'
-                for ri in recipe.recipe_ingredients.all())
-        )
+        return '<br>'.join(
+            f'{ri.ingredient.name} — {ri.amount} '
+            f'{ri.ingredient.measurement_unit}'
+            for ri in recipe.recipe_ingredients.all())
 
-    @admin.display(description='Изображение')
+    @mark_safe
     def get_image(self, recipe):
         if recipe.image:
-            return format_html(
-                ('<img src="{}" '
-                 'width="80" height="80" '
-                 'style="border-radius:8px;" />'),
-                recipe.image.url)
+            return (
+                f'<img src="{recipe.image.url}" '
+                'width="80" height="80" '
+                'style="border-radius:8px;" />')
         return '—'
 
     @admin.display(description='Теги')
+    @mark_safe
     def get_tags(self, recipe):
-        return format_html(
-            '{}',
-            ', '.join(tag.name for tag in recipe.tags.all()))
+
+        return '<br>'.join(
+            tag.name for tag in recipe.tags.all())
 
 
 @admin.register(RecipeIngredient)

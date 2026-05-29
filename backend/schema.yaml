@@ -45,7 +45,7 @@ paths:
   /api/ingredients/:
     get:
       operationId: ingredients_list
-      description: ViewSet для чтения ингредиентов.
+      description: ViewSet для чтения продуктов.
       parameters:
       - name: name
         required: false
@@ -70,7 +70,7 @@ paths:
   /api/ingredients/{id}/:
     get:
       operationId: ingredients_retrieve
-      description: ViewSet для чтения ингредиентов.
+      description: ViewSet для чтения продуктов.
       parameters:
       - in: path
         name: id
@@ -285,7 +285,7 @@ paths:
   /api/recipes/{id}/get-link/:
     get:
       operationId: recipes_get_link_retrieve
-      description: Получение короткой ссылки на рецепт.
+      description: Получение ссылки на рецепт.
       parameters:
       - in: path
         name: id
@@ -642,7 +642,7 @@ components:
       - avatar
     Ingredient:
       type: object
-      description: Сериализатор для ингредиентов.
+      description: Сериализатор для продуктов.
       properties:
         id:
           type: integer
@@ -730,37 +730,6 @@ components:
         cooking_time:
           type: integer
           minimum: 1
-    PatchedUser:
-      type: object
-      description: Основной сериализатор пользователя.
-      properties:
-        email:
-          type: string
-          format: email
-          readOnly: true
-          title: Электронная почта
-        id:
-          type: integer
-          readOnly: true
-        username:
-          type: string
-          readOnly: true
-          title: Юзернейм
-        first_name:
-          type: string
-          readOnly: true
-          title: Имя
-        last_name:
-          type: string
-          readOnly: true
-          title: Фамилия
-        is_subscribed:
-          type: boolean
-          readOnly: true
-        avatar:
-          type: string
-          format: uri
-          readOnly: true
     RecipeIngredientRead:
       type: object
       description: Сериализатор для получения игредиентов в рецепте (GET).
@@ -829,6 +798,7 @@ components:
           type: string
           format: uri
           readOnly: true
+          title: Ссылка на картинку на сайте
         cooking_time:
           type: integer
           readOnly: true
@@ -924,6 +894,8 @@ components:
           type: string
           format: uri
           readOnly: true
+          nullable: true
+          title: Ссылка на аватар
         recipes:
           type: string
           readOnly: true
@@ -970,14 +942,6 @@ components:
       type: object
       description: Основной сериализатор пользователя.
       properties:
-        email:
-          type: string
-          format: email
-          readOnly: true
-          title: Электронная почта
-        id:
-          type: integer
-          readOnly: true
         username:
           type: string
           readOnly: true
@@ -990,15 +954,18 @@ components:
           type: string
           readOnly: true
           title: Фамилия
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Электронная почта
         is_subscribed:
           type: boolean
           readOnly: true
-        avatar:
-          type: string
-          format: uri
-          readOnly: true
       required:
-      - avatar
       - email
       - first_name
       - id
@@ -1007,16 +974,7 @@ components:
       - username
     UserCreate:
       type: object
-      description: Сериализатор для создания пользователя.
       properties:
-        email:
-          type: string
-          format: email
-          title: Электронная почта
-          maxLength: 254
-        id:
-          type: integer
-          readOnly: true
         username:
           type: string
           title: Юзернейм
@@ -1030,6 +988,14 @@ components:
           type: string
           title: Фамилия
           maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Электронная почта
+          maxLength: 254
+        id:
+          type: integer
+          readOnly: true
         password:
           type: string
           writeOnly: true

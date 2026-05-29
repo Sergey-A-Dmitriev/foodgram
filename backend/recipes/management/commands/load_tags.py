@@ -7,4 +7,3 @@ class Command(BaseLoadJSONCommand):
 
     model = Tag
     file_name = 'tags.json'
-    fields = ('name', 'slug')

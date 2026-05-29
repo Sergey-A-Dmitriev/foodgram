@@ -3,8 +3,7 @@ from recipes.models import Ingredient
 
 
 class Command(BaseLoadJSONCommand):
-    """Загрузка ингредиентов."""
+    """Загрузка продуктов."""
 
     model = Ingredient
     file_name = 'ingredients.json'
-    fields = ('name', 'measurement_unit')

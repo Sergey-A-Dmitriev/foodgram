@@ -1,57 +1,25 @@
 from django.contrib.auth import get_user_model
-from djoser.serializers import (
-    UserCreateSerializer as DjoserUserCreateSerializer)
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from recipes.models import Recipe, Subscription
+from api.serializers.common import ShortRecipeSerializer
+from recipes.models import Subscription
 
 User = get_user_model()
-
-
-class UserCreateSerializer(DjoserUserCreateSerializer):
-    """Сериализатор для создания пользователя."""
-
-    class Meta(DjoserUserCreateSerializer.Meta):
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'password',)
-
-
-class ShortRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор короткого рецепта."""
-
-    image = Base64ImageField(required=False, allow_null=True)
-
-    class Meta:
-        """Служебный класс."""
-
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class UserSerializer(DjoserUserSerializer):
     """Основной сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
-    avatar = Base64ImageField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
         fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
+            *DjoserUserSerializer.Meta.fields,
             'is_subscribed',
-            'avatar',)
-
+        )
         read_only_fields = fields
 
     @extend_schema_field(serializers.BooleanField)
@@ -60,7 +28,7 @@ class UserSerializer(DjoserUserSerializer):
 
         request = self.context.get('request')
 
-        return bool(
+        return (
             request
             and request.user.is_authenticated
             and request.user != account
@@ -75,7 +43,6 @@ class AvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField()
 
     class Meta:
-        """Служебный класс."""
 
         model = User
         fields = ('avatar',)

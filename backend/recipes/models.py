@@ -7,8 +7,7 @@ from recipes.constants import (MIN_AMOUNT_VALUE, MIN_TIME_COOK_VALUE,
                                SIZE_EMAIL_FIELD, SIZE_FIRSTNAME_FIELD,
                                SIZE_INGREDIENT_NAME_FIELD, SIZE_LASTNAME_FIELD,
                                SIZE_RECIPE_NAME_FIELD, SIZE_TAG_FIELDS,
-                               SIZE_TEXT_FIELD, SIZE_UNIT_FIELD,
-                               SIZE_USERNAME_FIELD)
+                               SIZE_UNIT_FIELD, SIZE_USERNAME_FIELD)
 
 
 class User(AbstractUser):
@@ -39,15 +38,13 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
-        """Служебный класс."""
 
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
     def __str__(self):
-        """Магический метод __str__."""
-        return self.username[:SIZE_TEXT_FIELD]
+        return self.username
 
 
 class Subscription(models.Model):
@@ -61,12 +58,11 @@ class Subscription(models.Model):
 
     author = models.ForeignKey(
         User,
-        related_name='subscriptions_as_author',
+        related_name='author_subscriptions',
         on_delete=models.CASCADE,
         verbose_name='Автор')
 
     class Meta:
-        """Служебный класс."""
 
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
@@ -81,8 +77,7 @@ class Subscription(models.Model):
                 name='prevent_self_subscription')]
 
     def __str__(self):
-        """Магический метод __str__."""
-        return f'{self.user} подписан на {self.author}'[:SIZE_TEXT_FIELD]
+        return f'{self.user} подписан на {self.author}'
 
 
 class Tag(models.Model):
@@ -98,14 +93,12 @@ class Tag(models.Model):
         verbose_name='slug')
 
     class Meta:
-        """Служебный класс."""
 
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
         ordering = ['name']
 
     def __str__(self):
-        """Магический метод __str__."""
         return self.name
 
 
@@ -121,15 +114,13 @@ class Ingredient(models.Model):
         verbose_name='Единица измерения')
 
     class Meta:
-        """Служебный класс."""
 
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
         ordering = ['name']
 
     def __str__(self):
-        """Магический метод __str__."""
-        return f'{self.name} ({self.measurement_unit})'[:SIZE_TEXT_FIELD]
+        return f'{self.name} ({self.measurement_unit})'
 
 
 class Recipe(models.Model):
@@ -160,7 +151,6 @@ class Recipe(models.Model):
         verbose_name='Теги')
 
     class Meta:
-        """Служебный класс."""
 
         default_related_name = 'recipes'
         verbose_name = 'Рецепт'
@@ -168,12 +158,11 @@ class Recipe(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        """Магический метод __str__."""
-        return self.name[:SIZE_TEXT_FIELD]
+        return self.name
 
 
 class RecipeIngredient(models.Model):
-    """Связующая таблица: рецепт + ингредиент + количество."""
+    """Связующая таблица: рецепт + продукт + количество."""
 
     recipe = models.ForeignKey(
         Recipe,
@@ -182,28 +171,26 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингредиент')
+        verbose_name='Продукт')
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(MIN_AMOUNT_VALUE)],
         verbose_name='Количество')
 
     class Meta:
-        """Служебный класс."""
 
         default_related_name = 'recipe_ingredients'
-        verbose_name = 'Количество ингредиента'
-        verbose_name_plural = 'Количество ингредиентов'
+        verbose_name = 'Количество продукта'
+        verbose_name_plural = 'Количество продуктов'
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
                 name='unique_recipe_ingredient')]
 
     def __str__(self):
-        """Магический метод __str__."""
         return (f'{self.recipe.name}: '
                 f'{self.amount} '
                 f'{self.ingredient.measurement_unit} '
-                f'{self.ingredient.name}')[:SIZE_TEXT_FIELD]
+                f'{self.ingredient.name}')
 
 
 class UserRecipeBaseModel(models.Model):
@@ -219,26 +206,23 @@ class UserRecipeBaseModel(models.Model):
         verbose_name='Рецепт')
 
     class Meta:
-        """Служебный класс."""
 
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_%(class)')]
 
     def __str__(self):
-        """Магический метод __str__."""
-        return f'{self.user.username} → {self.recipe.name}'[:SIZE_TEXT_FIELD]
+        return f'{self.user.username} → {self.recipe.name}'
 
 
 class Favorite(UserRecipeBaseModel):
     """Модель Избранное."""
 
     class Meta:
-        """Служебный класс."""
 
         default_related_name = 'favorites'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_favorite')]
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
 
@@ -247,12 +231,7 @@ class ShoppingCart(UserRecipeBaseModel):
     """Модель Список покупок."""
 
     class Meta:
-        """Служебный класс."""
 
         default_related_name = 'shopping_carts'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_shopping_cart')]
         verbose_name = 'Для покупок'
         verbose_name_plural = 'Для покупок'

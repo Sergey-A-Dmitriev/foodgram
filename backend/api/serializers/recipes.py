@@ -4,25 +4,23 @@ from rest_framework import serializers
 
 from api.serializers.users import UserSerializer
 from recipes.constants import MIN_AMOUNT_VALUE, MIN_TIME_COOK_VALUE
-from recipes.models import (Ingredient, Recipe,
-                            RecipeIngredient, Tag)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для тегов."""
 
     class Meta:
-        """Служебный класс."""
 
         model = Tag
         fields = ('id', 'name', 'slug')
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор для ингредиентов."""
+    """Сериализатор для продуктов."""
 
     class Meta:
-        """Служебный класс."""
 
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
@@ -39,7 +37,6 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit')
 
     class Meta:
-        """Служебный класс."""
 
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
@@ -66,12 +63,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientReadSerializer(
         many=True,
         source='recipe_ingredients')
-    image = serializers.ImageField(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
-        """Служебный класс."""
 
         model = Recipe
         fields = ('id', 'tags', 'name', 'text', 'ingredients', 'author',
@@ -79,24 +74,22 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'is_in_shopping_cart')
         read_only_fields = fields
 
-    def _is_relation_exists(self, recipe, model_name):
-        """Проверка существования связи user ↔ recipe."""
-
+    def _is_relation_exists(self, recipe, model):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False
-        user_id = request.user.id
-        return any(
-            rel.user_id == user_id
-            for rel in getattr(recipe, model_name).all())
+        return model.objects.filter(
+            recipe=recipe,
+            user=request.user,
+        ).exists()
 
     @extend_schema_field(serializers.BooleanField)
     def get_is_favorited(self, recipe):
-        return self._is_relation_exists(recipe, 'favorites')
+        return self._is_relation_exists(recipe, Favorite)
 
     @extend_schema_field(serializers.BooleanField)
     def get_is_in_shopping_cart(self, recipe):
-        return self._is_relation_exists(recipe, 'shopping_carts')
+        return self._is_relation_exists(recipe, ShoppingCart)
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -110,50 +103,47 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True)
+    author = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
     cooking_time = serializers.IntegerField(
         min_value=MIN_TIME_COOK_VALUE)
 
     class Meta:
-        """Служебный класс."""
 
         model = Recipe
         fields = ('ingredients', 'tags', 'image', 'name',
-                  'text', 'cooking_time')
+                  'text', 'author', 'cooking_time')
 
     def create_ingredients(self, ingredients, recipe):
-        """Метод для создания ингредиентов в рецепте."""
-        recipe_ingredients = [
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient=item['id'],   # ← уже объект Ingredient
-                amount=item['amount'])
-            for item in ingredients]
-        RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        """Метод для создания продуктов в рецепте."""
+        RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=item['id'],
+                    amount=item['amount'],
+                )
+                for item in ingredients
+            ]
+        )
 
     def create(self, validated_data):
         """Метод для создания рецепта."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = super().create({
-            **validated_data,
-            'author': self.context['request'].user})
-        recipe.author = self.context['request'].user
-        recipe.save()
+        recipe = super().create(validated_data)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients, recipe)
         return recipe
 
     def update(self, recipe, validated_data):
         """Метод для обновления рецепта."""
-        tags = validated_data.pop('tags', None)
-        ingredients = validated_data.pop('ingredients', None)
-        recipe = super().update(recipe, validated_data)
-        if tags is not None:
-            recipe.tags.set(tags)
-        if ingredients is not None:
-            recipe.recipe_ingredients.all().delete()
-            self.create_ingredients(ingredients, recipe)
-        return recipe
+        recipe.tags.set(validated_data.pop('tags'))
+        recipe.recipe_ingredients.all().delete()
+        self.create_ingredients(
+            validated_data.pop('ingredients'),
+            recipe)
+        return super().update(recipe, validated_data)
 
     def to_representation(self, instance):
         """Метод для представления рецепта."""
@@ -175,11 +165,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ingredients = data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError(
-                'Должен быть хотя бы один ингредиент')
+                'Должен быть хотя бы один продукт')
         ingredient_ids = [
             ingredient['id']
             for ingredient in ingredients]
-        self._validate_duplicates(ingredient_ids, 'ингредиенты')
+        self._validate_duplicates(ingredient_ids, 'продукты')
 
         tags = data.get('tags')
         if not tags:

@@ -13,11 +13,10 @@ def generate_shopping_list(user, ingredients_qs):
         ingredients[(name, unit)]['recipes'].add(
             f"{item['recipe__name']} ({item['recipe__author__username']})")
 
-    product_lines = []
-    for i, ((name, unit), data) in enumerate(ingredients.items(), start=1):
-        product_lines.append(
-            f"{i}. {name} — {data['amount']} {unit}")
-
+    product_lines = [
+        f"{i}. {name} — {data['amount']} {unit}"
+        for i, ((name, unit), data) in enumerate(ingredients.items(),
+                                                 start=1)]
     recipe_lines = []
     for recipes in ingredients.values():
         recipe_lines.extend(recipes['recipes'])

@@ -31,7 +31,6 @@ class RecipeFilter(django_filters.FilterSet):
         method='filter_is_in_shopping_cart')
 
     class Meta:
-        """Служебный класс."""
 
         model = Recipe
         fields = ['tags', 'author', 'is_in_shopping_cart', 'is_favorited']
@@ -99,7 +98,7 @@ class HasSubscriptionsFilter(HasRelationFilter):
 class HasFollowersFilter(HasRelationFilter):
     title = 'Есть подписчики'
     parameter_name = 'has_followers'
-    related_name = 'subscriptions_as_author'
+    related_name = 'author_subscriptions'
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
