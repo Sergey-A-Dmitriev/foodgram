@@ -1,7 +1,5 @@
-from io import BytesIO
-
 from django.db.models import Sum
-from django.http import FileResponse, Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -132,11 +130,10 @@ class RecipeViewSet(ModelViewSet):
             user=request.user,
             ingredients_qs=ingredients)
 
-        return FileResponse(
-            BytesIO(content),
-            as_attachment=True,
-            filename='shopping_list.txt',
-            content_type='text/plain')
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"')
+        return response
 
     @action(
         detail=True,
