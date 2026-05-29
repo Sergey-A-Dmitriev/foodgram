@@ -112,8 +112,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=['get'],
             detail=False,
-            permission_classes=[IsAuthenticated],
-            url_path='shopping_cart/download')
+            permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         """Скачать список покупок."""
         ingredients = (
