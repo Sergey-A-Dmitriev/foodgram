@@ -108,8 +108,6 @@ python manage.py runserver
 Сервер будет доступен по адресу  
 [локальный сервер](http://127.0.0.1:8000/)
 
-## Endpoints, схемы запросов и ответов
-Доступны [локальный сервер - документация](http://127.0.0.1:8000/api/docs/)
 
 ## Проект доступен на ресурсах:
 Развернут на учебной виртуальной машине 158.160.251.106  
@@ -117,10 +115,13 @@ python manage.py runserver
 [https://foodgramer.ru](https://foodgramer.ru)  
 
 
-
 ## Панель администратора единая, доступна по адресу:
 
-[https://foodgramer.ru/admin/](https://foodgramer.ru/admin/)    
+[https://foodgramer.ru/admin/](https://foodgramer.ru/admin/)   
+
+
+## Endpoints, схемы запросов и ответов
+Доступны [https://foodgramer.ru](https://foodgramer.ru/api/docs/)
 
 
 ## Автор
