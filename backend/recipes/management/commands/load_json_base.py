@@ -22,17 +22,15 @@ class BaseLoadJSONCommand(BaseCommand):
             ) as file:
 
                 created = self.model.objects.bulk_create(
-                    [
+                    (
                         self.model(**item)
                         for item in json.load(file)
-                    ],
-                    ignore_conflicts=True,)
+                    ),
+                    ignore_conflicts=True)
             self.stdout.write(
                 self.style.SUCCESS(
                     f'Фикстура "{self.file_name}" загружена. '
-                    f'Создано записей: {len(created)}')
-            )
+                    f'Создано записей: {len(created)}'))
         except Exception as e:
             self.stderr.write(
-                self.style.ERROR(f'Ошибка загрузки {self.file_name}: {e}')
-            )
+                self.style.ERROR(f'Ошибка загрузки {self.file_name}: {e}'))

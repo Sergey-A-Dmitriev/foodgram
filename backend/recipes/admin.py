@@ -17,31 +17,61 @@ class UserRecipeAdmin(admin.ModelAdmin):
 
 
 @admin.register(User)
-class UserAdmin(RecipesCountMixin, UserAdmin):
+class UserAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация кастомной модели User."""
 
-    list_display = ('id', 'username', 'get_full_name', 'email', 'get_avatar',
-                    *RecipesCountMixin.list_display, 'get_subscriptions_count',
-                    'get_followers_count')
-    list_filter = ('is_staff', 'is_superuser', 'is_active',
-                   HasRecipesFilter, HasSubscriptionsFilter,
-                   HasFollowersFilter)
-    search_fields = ('username', 'email', 'first_name', 'last_name')
-    fieldsets = UserAdmin.fieldsets + (
-        ('Дополнительная информация', {'fields': ('avatar',)}),)
+    list_display = (
+        'id',
+        'username',
+        'get_full_name',
+        'email',
+        'get_avatar',
+        'get_recipes_count',
+        'get_subscriptions_count',
+        'get_followers_count',
+    )
+
+    list_filter = (
+        'is_staff',
+        'is_superuser',
+        'is_active',
+        HasRecipesFilter,
+        HasSubscriptionsFilter,
+        HasFollowersFilter,
+    )
+
+    search_fields = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+    )
+
+    fieldsets = (
+        ('Основное', {
+            'fields': ('username', 'email', 'first_name', 'last_name')
+        }),
+        ('Дополнительная информация', {
+            'fields': ('avatar',)
+        }),
+    )
+
+    def _get_recipes_queryset(self, obj):
+        return obj.recipes.all()
 
     @admin.display(description='ФИО')
     def get_full_name(self, account):
-        return f'{account.first_name} {account.last_name}'
+        return f'{account.first_name} {account.last_name}'.strip()
 
     @admin.display(description='Аватар')
     @mark_safe
     def get_avatar(self, account):
-        if account.avatar:
-            return (f'<img src="{account.avatar.url}" '
-                    'width="50" height="50" '
-                    'style="border-radius:50%;" />')
-        return '—'
+        return (
+            f'<img src="{account.avatar.url}" '
+            f'width="50" height="50" '
+            f'style="border-radius:50%;" />'
+            if account.avatar else '—'
+        )
 
     @admin.display(description='Подписки')
     def get_subscriptions_count(self, account):
@@ -57,13 +87,16 @@ class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация модели Tag."""
 
     list_display = ('id', 'name', 'slug',
-                    *RecipesCountMixin.list_display)
+                    'get_recipes_count')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name', 'slug')
 
+    def _get_recipes_queryset(self, obj):
+        return obj.recipes.all()
+
 
 @admin.register(Ingredient)
-class IngredientAdmin(admin.ModelAdmin):
+class IngredientAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация модели Ingredient."""
 
     list_display = ('id', 'name', 'measurement_unit',
@@ -72,10 +105,8 @@ class IngredientAdmin(admin.ModelAdmin):
                    ('recipe_ingredients', admin.EmptyFieldListFilter))
     search_fields = ('name', 'measurement_unit')
 
-    @admin.display(description='Рецептов')
-    def get_recipes_count(self, ingredient):
-        return (Recipe.objects.filter(
-            recipe_ingredients__ingredient=ingredient).count())
+    def _get_recipes_queryset(self, obj):
+        return Recipe.objects.filter(recipe_ingredients__ingredient=obj)
 
 
 class RecipeIngredientInline(admin.TabularInline):

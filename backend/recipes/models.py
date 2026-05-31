@@ -208,10 +208,11 @@ class UserRecipeBaseModel(models.Model):
     class Meta:
 
         abstract = True
+        default_related_name = '%(class)ss'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_%(class)')]
+                name='unique_%(class)s')]
 
     def __str__(self):
         return f'{self.user.username} → {self.recipe.name}'
@@ -220,9 +221,7 @@ class UserRecipeBaseModel(models.Model):
 class Favorite(UserRecipeBaseModel):
     """Модель Избранное."""
 
-    class Meta:
-
-        default_related_name = 'favorites'
+    class Meta(UserRecipeBaseModel.Meta):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
 
@@ -230,8 +229,6 @@ class Favorite(UserRecipeBaseModel):
 class ShoppingCart(UserRecipeBaseModel):
     """Модель Список покупок."""
 
-    class Meta:
-
-        default_related_name = 'shopping_carts'
+    class Meta(UserRecipeBaseModel.Meta):
         verbose_name = 'Для покупок'
         verbose_name_plural = 'Для покупок'

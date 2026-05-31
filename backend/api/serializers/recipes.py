@@ -76,12 +76,13 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def _is_relation_exists(self, recipe, model):
         request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-        return model.objects.filter(
-            recipe=recipe,
-            user=request.user,
-        ).exists()
+
+        return (request
+                and request.user.is_authenticated
+                and model.objects.filter(
+                    recipe=recipe,
+                    user=request.user,
+                ).exists())
 
     @extend_schema_field(serializers.BooleanField)
     def get_is_favorited(self, recipe):
@@ -117,14 +118,14 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def create_ingredients(self, ingredients, recipe):
         """Метод для создания продуктов в рецепте."""
         RecipeIngredient.objects.bulk_create(
-            [
+            (
                 RecipeIngredient(
                     recipe=recipe,
                     ingredient=item['id'],
                     amount=item['amount'],
                 )
                 for item in ingredients
-            ]
+            )
         )
 
     def create(self, validated_data):

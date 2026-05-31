@@ -11,12 +11,12 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from api.filters import IngredientSearchFilter, RecipeFilter
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers.common import ShortRecipeSerializer
 from api.serializers.recipes import (IngredientSerializer,
                                      RecipeReadSerializer,
                                      RecipeWriteSerializer, TagSerializer)
-from recipes.filters import IngredientSearchFilter, RecipeFilter
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from recipes.services.shopping_list import generate_shopping_list
@@ -47,7 +47,7 @@ class RecipeViewSet(ModelViewSet):
 
     queryset = Recipe.objects.all().prefetch_related(
         'favorites',
-        'shopping_carts',
+        'shoppingcarts',
     )
 
     filter_backends = (DjangoFilterBackend,)
@@ -117,7 +117,7 @@ class RecipeViewSet(ModelViewSet):
         """Скачать список покупок."""
         ingredients = (
             RecipeIngredient.objects
-            .filter(recipe__shopping_carts__user=request.user)
+            .filter(recipe__shoppingcarts__user=request.user)
             .values(
                 'ingredient__name',
                 'ingredient__measurement_unit',

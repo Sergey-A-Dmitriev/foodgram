@@ -1,75 +1,17 @@
-import django_filters
 from django.contrib import admin
-from django_filters import rest_framework as filters
-from rest_framework.filters import SearchFilter
 
-from recipes.models import Recipe, Tag
+from recipes.constants import FAST_LIMIT, MEDIUM_LIMIT
 
 
-class IngredientSearchFilter(SearchFilter):
-    """Фильтр для поиска ингридентов по имени."""
-
-    search_param = 'name'
-
-
-class RecipeFilter(django_filters.FilterSet):
-    """Фильтр для рецептов по автору."""
-
-    available_tags = Tag.objects.all()
-    tags = django_filters.ModelMultipleChoiceFilter(
-        field_name='tags__slug',
-        to_field_name='slug',
-        queryset=available_tags)
-
-    author = django_filters.NumberFilter(
-        field_name='author__id')
-
-    is_favorited = filters.BooleanFilter(
-        method='filter_is_favorited')
-
-    is_in_shopping_cart = filters.BooleanFilter(
-        method='filter_is_in_shopping_cart')
-
-    class Meta:
-
-        model = Recipe
-        fields = ['tags', 'author', 'is_in_shopping_cart', 'is_favorited']
-
-    def filter_is_in_shopping_cart(self, recipes, name, is_in_cart):
-        """Для фильтрации рецептов по пользователю в покупках."""
-        user = self.request.user
-        if not user.is_authenticated:
-            return recipes.none()
-        if is_in_cart:
-            return recipes.filter(
-                shopping_carts__user=user
-            ).distinct()
-        return recipes
-
-    def filter_is_favorited(self, recipes, name, is_in_favorited):
-        """Для фильтрации рецептов по пользователю в избранном."""
-        user = self.request.user
-        if not user.is_authenticated:
-            return recipes.none()
-        if is_in_favorited:
-            return recipes.filter(
-                favorites__user=user
-            ).distinct()
-        return recipes
-
-
-class YesNoFilter(admin.SimpleListFilter):
-    """Базовый yes/no фильтр."""
-
-    def lookups(self, request, model_admin):
-        return (('yes', 'Да'),
-                ('no', 'Нет'),)
-
-
-class HasRelationFilter(YesNoFilter):
+class HasRelationFilter(admin.SimpleListFilter):
     """Базовый фильтр наличия связи."""
 
-    related_name: str = ''
+    related_name = ''
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Да'),
+            ('no', 'Нет'))
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -105,25 +47,25 @@ class CookingTimeFilter(admin.SimpleListFilter):
     title = 'Время приготовления'
     parameter_name = 'cooking_time_group'
 
+    TIME_RANGES = {
+        'fast': (0, FAST_LIMIT - 1),
+        'medium': (FAST_LIMIT, MEDIUM_LIMIT - 1),
+        'slow': (MEDIUM_LIMIT, 10**9)}
+
     def lookups(self, request, model_admin):
         qs = model_admin.get_queryset(request)
+        counts = {
+            key: qs.filter(cooking_time__range=value).count()
+            for key, value in self.TIME_RANGES.items()}
 
-        fast = qs.filter(cooking_time__lt=10).count()
-        medium = qs.filter(cooking_time__gte=10, cooking_time__lt=30).count()
-        slow = qs.filter(cooking_time__gte=30).count()
-
-        return (('fast', f'Быстро (<10 мин) ({fast})'),
-                ('medium', f'Средне (10–30 мин) ({medium})'),
-                ('slow', f'Долго (≥30 мин) ({slow})'),)
+        return (
+            ('fast', f'Быстро (<10 мин) ({counts["fast"]})'),
+            ('medium', f'Средне (10–30 мин) ({counts["medium"]})'),
+            ('slow', f'Долго (>30 мин) ({counts["slow"]})'))
 
     def queryset(self, request, recipes):
         value = self.value()
-        if value == 'fast':
-            return recipes.filter(cooking_time__lt=10)
-        if value == 'medium':
+        if value in self.TIME_RANGES:
             return recipes.filter(
-                cooking_time__gte=10,
-                cooking_time__lt=30)
-        if value == 'slow':
-            return recipes.filter(cooking_time__gte=30)
+                cooking_time__range=self.TIME_RANGES[value])
         return recipes

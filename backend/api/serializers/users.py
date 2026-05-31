@@ -14,14 +14,11 @@ class UserSerializer(DjoserUserSerializer):
     """Основной сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
-    avatar = serializers.ImageField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
         fields = (
             *DjoserUserSerializer.Meta.fields,
-            'is_subscribed',
-            'avatar'
-        )
+            'is_subscribed')
         read_only_fields = fields
 
     @extend_schema_field(serializers.BooleanField)
@@ -56,19 +53,12 @@ class SubscriptionAuthorSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
 
-    class Meta:
+    class Meta(DjoserUserSerializer.Meta):
 
-        model = User
-        fields = ('email',
-                  'id',
-                  'username',
-                  'first_name',
-                  'last_name',
-                  'is_subscribed',
-                  'avatar',
-                  'recipes',
-                  'recipes_count',)
-
+        fields = (
+            *DjoserUserSerializer.Meta.fields,
+            'recipes',
+            'recipes_count')
         read_only_fields = fields
 
     def get_recipes(self, recipes):

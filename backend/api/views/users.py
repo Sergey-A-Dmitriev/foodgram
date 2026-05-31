@@ -21,13 +21,9 @@ class UserViewSet(DjoserUserViewSet):
     http_method_names = ['get', 'post', 'put', 'delete']
     lookup_field = 'pk'
 
-    def get_queryset(self):
-        queryset = User.objects.annotate(
-            recipes_count=Count('recipes'))
-        ordering = User._meta.ordering
-        if ordering:
-            queryset = queryset.order_by(*ordering)
-        return queryset
+    queryset = User.objects.annotate(
+        recipes_count=Count('recipes')
+    ).order_by(*User._meta.ordering)
 
     @action(
         methods=['get'],
