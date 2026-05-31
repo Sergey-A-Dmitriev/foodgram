@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.safestring import mark_safe
 
 from recipes.filters import (CookingTimeFilter, HasFollowersFilter,
@@ -17,7 +17,7 @@ class UserRecipeAdmin(admin.ModelAdmin):
 
 
 @admin.register(User)
-class UserAdmin(RecipesCountMixin, admin.ModelAdmin):
+class UserAdmin(RecipesCountMixin, DjangoUserAdmin):
     """Регистрация кастомной модели User."""
 
     list_display = (
