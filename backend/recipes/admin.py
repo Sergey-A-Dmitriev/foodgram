@@ -47,10 +47,7 @@ class UserAdmin(RecipesCountMixin, DjangoUserAdmin):
         'last_name',
     )
 
-    fieldsets = (
-        ('Основное', {
-            'fields': ('username', 'email', 'first_name', 'last_name')
-        }),
+    fieldsets = DjangoUserAdmin.fieldsets + (
         ('Дополнительная информация', {
             'fields': ('avatar',)
         }),
