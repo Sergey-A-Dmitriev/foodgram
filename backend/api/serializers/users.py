@@ -18,7 +18,8 @@ class UserSerializer(DjoserUserSerializer):
     class Meta(DjoserUserSerializer.Meta):
         fields = (
             *DjoserUserSerializer.Meta.fields,
-            'is_subscribed')
+            'is_subscribed',
+            'avatar')
         read_only_fields = fields
 
     @extend_schema_field(serializers.BooleanField)
