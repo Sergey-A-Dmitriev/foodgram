@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.contrib.auth.admin import UserAdmin as DjoserUserAdmin
 from django.utils.safestring import mark_safe
 
 from recipes.filters import (CookingTimeFilter, HasFollowersFilter,
@@ -17,7 +17,7 @@ class UserRecipeAdmin(admin.ModelAdmin):
 
 
 @admin.register(User)
-class UserAdmin(RecipesCountMixin, DjangoUserAdmin):
+class UserAdmin(RecipesCountMixin, DjoserUserAdmin):
     """Регистрация кастомной модели User."""
 
     list_display = (
@@ -47,7 +47,7 @@ class UserAdmin(RecipesCountMixin, DjangoUserAdmin):
         'last_name',
     )
 
-    fieldsets = DjangoUserAdmin.fieldsets + (
+    fieldsets = DjoserUserAdmin.fieldsets + (
         ('Дополнительная информация', {
             'fields': ('avatar',)
         }),
