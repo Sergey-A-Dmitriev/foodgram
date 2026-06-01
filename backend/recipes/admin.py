@@ -1,8 +1,7 @@
-from django.contrib.auth.models import Group
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
-from django.utils.html import format_html
 
 from recipes.filters import (CookingTimeFilter, HasFollowersFilter,
                              HasRecipesFilter, HasSubscriptionsFilter,
@@ -11,8 +10,8 @@ from recipes.mixins import RecipesCountMixin
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Subscription, Tag, User)
 
-
 admin.site.unregister(Group)
+
 
 def render_image(obj, field, size=80):
     image = getattr(obj, field, None)
@@ -21,6 +20,7 @@ def render_image(obj, field, size=80):
             f'<img src="{image.url}" width="{size}" />'
         )
     return '—'
+
 
 @admin.register(Favorite, ShoppingCart)
 class UserRecipeAdmin(admin.ModelAdmin):
@@ -127,7 +127,7 @@ class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация модели Ingredient."""
-    
+
     related_name = 'recipe_ingredients'
     list_display = ('id', 'name', 'measurement_unit',
                     *RecipesCountMixin.list_display)
@@ -188,7 +188,7 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='Фото')
     def get_image(self, obj):
         return render_image(obj, 'image')
-    
+
     @admin.display(description='Фото рецепта')
     def image_preview(self, obj):
         return render_image(obj, 'image')

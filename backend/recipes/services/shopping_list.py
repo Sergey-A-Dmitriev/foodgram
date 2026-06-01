@@ -16,6 +16,7 @@ MONTHS = {
     12: 'декабря',
 }
 
+
 def generate_shopping_list(user, ingredients_qs):
     """Формирование списка покупок."""
     today = datetime.now()

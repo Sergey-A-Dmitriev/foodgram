@@ -1,6 +1,4 @@
 from django.contrib import admin
-import numpy as np
-from django.core.cache import cache
 
 
 class HasRelationFilter(admin.SimpleListFilter):
