@@ -121,7 +121,7 @@ python manage.py runserver
 
 
 ## Endpoints, схемы запросов и ответов
-Доступны [https://foodgramer.ru](https://foodgramer.ru/api/docs/)
+Доступны [https://foodgramer.ru/api/docs/](https://foodgramer.ru/api/docs/)
 
 
 ## Автор
