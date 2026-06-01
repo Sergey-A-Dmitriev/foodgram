@@ -1,24 +1,41 @@
+from django.contrib.auth.models import Group
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as DjoserUserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 
 from recipes.filters import (CookingTimeFilter, HasFollowersFilter,
-                             HasRecipesFilter, HasSubscriptionsFilter)
+                             HasRecipesFilter, HasSubscriptionsFilter,
+                             UsedInRecipesFilter)
 from recipes.mixins import RecipesCountMixin
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Subscription, Tag, User)
 
 
+admin.site.unregister(Group)
+
+def render_image(obj, field, size=80):
+    image = getattr(obj, field, None)
+    if image:
+        return mark_safe(
+            f'<img src="{image.url}" width="{size}" />'
+        )
+    return '—'
+
+@admin.register(Favorite, ShoppingCart)
 class UserRecipeAdmin(admin.ModelAdmin):
-    """Базовый класс для моделей user-recipe."""
+    """Регистрация админки для Favorite и ShoppingCart."""
 
     list_display = ('user', 'recipe')
     search_fields = ('user__username', 'recipe__name')
 
 
 @admin.register(User)
-class UserAdmin(RecipesCountMixin, DjoserUserAdmin):
+class UserAdmin(RecipesCountMixin, DjangoUserAdmin):
     """Регистрация кастомной модели User."""
+
+    related_name = 'recipes'
+    readonly_fields = ('avatar_preview',)
 
     list_display = (
         'id',
@@ -26,7 +43,7 @@ class UserAdmin(RecipesCountMixin, DjoserUserAdmin):
         'get_full_name',
         'email',
         'get_avatar',
-        'get_recipes_count',
+        *RecipesCountMixin.list_display,
         'get_subscriptions_count',
         'get_followers_count',
     )
@@ -47,28 +64,42 @@ class UserAdmin(RecipesCountMixin, DjoserUserAdmin):
         'last_name',
     )
 
-    fieldsets = DjoserUserAdmin.fieldsets + (
-        ('Дополнительная информация', {
-            'fields': ('avatar',)
+    fieldsets = (
+        (None, {
+            'fields': ('username', 'password')
+        }),
+        ('Персональная информация', {
+            'fields': (
+                'first_name',
+                'last_name',
+                'email',
+                'avatar',
+                'avatar_preview',
+            )
+        }),
+        ('Права доступа', {
+            'fields': (
+                'is_active',
+                'is_staff',
+                'is_superuser',
+            )
+        }),
+        ('Важные даты', {
+            'fields': ('last_login', 'date_joined')
         }),
     )
-
-    def _get_recipes_queryset(self, obj):
-        return obj.recipes.all()
 
     @admin.display(description='ФИО')
     def get_full_name(self, account):
         return f'{account.first_name} {account.last_name}'.strip()
 
     @admin.display(description='Аватар')
-    @mark_safe
-    def get_avatar(self, account):
-        return (
-            f'<img src="{account.avatar.url}" '
-            f'width="50" height="50" '
-            f'style="border-radius:50%;" />'
-            if account.avatar else '—'
-        )
+    def get_avatar(self, obj):
+        return render_image(obj, 'avatar')
+
+    @admin.display(description='Аватар')
+    def avatar_preview(self, obj):
+        return render_image(obj, 'avatar')
 
     @admin.display(description='Подписки')
     def get_subscriptions_count(self, account):
@@ -83,8 +114,9 @@ class UserAdmin(RecipesCountMixin, DjoserUserAdmin):
 class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация модели Tag."""
 
+    related_name = 'recipes'
     list_display = ('id', 'name', 'slug',
-                    'get_recipes_count')
+                    *RecipesCountMixin.list_display)
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name', 'slug')
 
@@ -95,11 +127,13 @@ class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(RecipesCountMixin, admin.ModelAdmin):
     """Регистрация модели Ingredient."""
-
+    
+    related_name = 'recipe_ingredients'
     list_display = ('id', 'name', 'measurement_unit',
-                    'get_recipes_count')
-    list_filter = ('measurement_unit',
-                   ('recipe_ingredients', admin.EmptyFieldListFilter))
+                    *RecipesCountMixin.list_display)
+    list_filter = (
+        'measurement_unit',
+        UsedInRecipesFilter)
     search_fields = ('name', 'measurement_unit')
 
     def _get_recipes_queryset(self, obj):
@@ -118,7 +152,9 @@ class RecipeIngredientInline(admin.TabularInline):
 class RecipeAdmin(admin.ModelAdmin):
     """Регистрация модели Рецепт."""
 
-    list_display = ('id', 'name', 'cooking_time', 'author',
+    readonly_fields = ('created_at', 'image_preview')
+
+    list_display = ('id', 'name', 'cooking_time_display', 'author',
                     'get_favorites_count', 'get_ingredients',
                     'get_tags', 'get_image')
     list_filter = ('tags', 'author', CookingTimeFilter)
@@ -126,10 +162,9 @@ class RecipeAdmin(admin.ModelAdmin):
                      'tags__slug', 'recipe_ingredients__ingredient__name',)
     inlines = [RecipeIngredientInline]
     filter_horizontal = ('tags',)
-    readonly_fields = ('created_at',)
     fieldsets = (
         ('Основное', {
-            'fields': ('name', 'author', 'text', 'image')}),
+            'fields': ('name', 'author', 'text', 'image', 'image_preview')}),
         ('Детали', {
             'fields': ('cooking_time', 'tags')}),
         ('Даты', {
@@ -150,21 +185,23 @@ class RecipeAdmin(admin.ModelAdmin):
             f'{ri.ingredient.measurement_unit}'
             for ri in recipe.recipe_ingredients.all())
 
-    @mark_safe
-    def get_image(self, recipe):
-        if recipe.image:
-            return (
-                f'<img src="{recipe.image.url}" '
-                'width="80" height="80" '
-                'style="border-radius:8px;" />')
-        return '—'
+    @admin.display(description='Фото')
+    def get_image(self, obj):
+        return render_image(obj, 'image')
+    
+    @admin.display(description='Фото рецепта')
+    def image_preview(self, obj):
+        return render_image(obj, 'image')
 
     @admin.display(description='Теги')
     @mark_safe
     def get_tags(self, recipe):
-
         return '<br>'.join(
             tag.name for tag in recipe.tags.all())
+
+    @admin.display(description=mark_safe('Время<br>(мин)'))
+    def cooking_time_display(self, recipe):
+        return recipe.cooking_time
 
 
 @admin.register(RecipeIngredient)
@@ -175,16 +212,6 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
     list_filter = ('recipe', 'ingredient')
     search_fields = ('recipe__title', 'ingredient__name')
     autocomplete_fields = ['recipe', 'ingredient']
-
-
-@admin.register(Favorite)
-class FavoriteAdmin(UserRecipeAdmin):
-    """Регистрация модели Избранное."""
-
-
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(UserRecipeAdmin):
-    """Регистрация модели Покупки."""
 
 
 @admin.register(Subscription)

@@ -139,7 +139,7 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=True,
         methods=['get'],
-        url_path='get-link',
+        url_path='get_link',
         url_name='short-link')
     def get_link(self, request, pk=None):
         """Получение ссылки на рецепт."""

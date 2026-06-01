@@ -1,17 +1,18 @@
 from django.contrib import admin
-
-from recipes.constants import FAST_LIMIT, MEDIUM_LIMIT
+import numpy as np
+from django.core.cache import cache
 
 
 class HasRelationFilter(admin.SimpleListFilter):
     """Базовый фильтр наличия связи."""
 
+    LOOKUPS = (('yes', 'Да'),
+               ('no', 'Нет'))
+
     related_name = ''
 
     def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Да'),
-            ('no', 'Нет'))
+        return self.LOOKUPS
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -47,25 +48,54 @@ class CookingTimeFilter(admin.SimpleListFilter):
     title = 'Время приготовления'
     parameter_name = 'cooking_time_group'
 
-    TIME_RANGES = {
-        'fast': (0, FAST_LIMIT - 1),
-        'medium': (FAST_LIMIT, MEDIUM_LIMIT - 1),
-        'slow': (MEDIUM_LIMIT, 10**9)}
+    CACHE_KEY = 'cooking_time_quantiles'
+
+    def get_buckets(self, queryset):
+        values = list(queryset.values_list('cooking_time', flat=True))
+        if len(values) < 3:
+            return None
+        values = sorted(values)
+        fast_threshold = values[len(values) // 3]
+        slow_threshold = values[(2 * len(values)) // 3]
+        return fast_threshold, slow_threshold
 
     def lookups(self, request, model_admin):
-        qs = model_admin.get_queryset(request)
-        counts = {
-            key: qs.filter(cooking_time__range=value).count()
-            for key, value in self.TIME_RANGES.items()}
+        recipes = model_admin.get_queryset(request)
+        quantiles = self.get_buckets(recipes)
+        if not quantiles:
+            return (
+                ('fast', 'Быстро (0)'),
+                ('medium', 'Средне (0)'),
+                ('slow', 'Долго (0)'))
+        fast_threshold, slow_threshold = quantiles
+        fast_count = recipes.filter(cooking_time__lte=fast_threshold).count()
+        medium_count = (recipes.filter(cooking_time__gt=fast_threshold,
+                                       cooking_time__lte=slow_threshold)
+                        .count())
+        slow_count = recipes.filter(cooking_time__gt=slow_threshold).count()
 
         return (
-            ('fast', f'Быстро (<10 мин) ({counts["fast"]})'),
-            ('medium', f'Средне (10–30 мин) ({counts["medium"]})'),
-            ('slow', f'Долго (>30 мин) ({counts["slow"]})'))
+            ('fast', f'Быстро ({fast_count})'),
+            ('medium', f'Средне ({medium_count})'),
+            ('slow', f'Долго ({slow_count})'))
 
-    def queryset(self, request, recipes):
+    def queryset(self, request, queryset):
+        quantiles = self.get_buckets(queryset)
+        if not quantiles:
+            return queryset
+        fast_threshold, slow_threshold = quantiles
         value = self.value()
-        if value in self.TIME_RANGES:
-            return recipes.filter(
-                cooking_time__range=self.TIME_RANGES[value])
-        return recipes
+        if value == 'fast':
+            return queryset.filter(cooking_time__lte=fast_threshold)
+        if value == 'medium':
+            return queryset.filter(cooking_time__gt=fast_threshold,
+                                   cooking_time__lte=slow_threshold)
+        if value == 'slow':
+            return queryset.filter(cooking_time__gt=slow_threshold)
+        return queryset
+
+
+class UsedInRecipesFilter(HasRelationFilter):
+    title = 'Используется в рецептах'
+    parameter_name = 'used_in_recipes'
+    related_name = 'recipe_ingredients'

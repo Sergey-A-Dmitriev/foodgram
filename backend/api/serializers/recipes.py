@@ -118,15 +118,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def create_ingredients(self, ingredients, recipe):
         """Метод для создания продуктов в рецепте."""
         RecipeIngredient.objects.bulk_create(
-            (
-                RecipeIngredient(
-                    recipe=recipe,
-                    ingredient=item['id'],
-                    amount=item['amount'],
-                )
-                for item in ingredients
-            )
-        )
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=item['id'],
+                amount=item['amount'])
+            for item in ingredients)
 
     def create(self, validated_data):
         """Метод для создания рецепта."""

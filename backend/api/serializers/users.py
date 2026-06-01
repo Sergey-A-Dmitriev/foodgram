@@ -54,13 +54,12 @@ class SubscriptionAuthorSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
 
-    class Meta(DjoserUserSerializer.Meta):
+    class Meta(UserSerializer.Meta):
 
         fields = (
-            *DjoserUserSerializer.Meta.fields,
+            *UserSerializer.Meta.fields,
             'recipes',
-            'recipes_count',
-            'avatar')
+            'recipes_count')
         read_only_fields = fields
 
     def get_recipes(self, recipes):
