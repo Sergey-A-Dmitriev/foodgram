@@ -122,6 +122,11 @@ class Ingredient(models.Model):
     def __str__(self):
         return f'{self.name} ({self.measurement_unit})'
 
+    @property
+    def recipes(self):
+        return Recipe.objects.filter(
+            recipe_ingredients__ingredient=self)
+
 
 class Recipe(models.Model):
     """Модель рецепта."""

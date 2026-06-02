@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 
 from recipes.filters import (CookingTimeFilter, HasFollowersFilter,
                              HasRecipesFilter, HasSubscriptionsFilter,
-                             UsedInRecipesFilter)
+                             TagFilter, UsedInRecipesFilter)
 from recipes.mixins import RecipesCountMixin
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Subscription, Tag, User)
@@ -157,7 +157,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'cooking_time_display', 'author',
                     'get_favorites_count', 'get_ingredients',
                     'get_tags', 'get_image')
-    list_filter = ('tags', 'author', CookingTimeFilter)
+    list_filter = (TagFilter, 'author', CookingTimeFilter)
     search_fields = ('name', 'author__username', 'tags__name',
                      'tags__slug', 'recipe_ingredients__ingredient__name',)
     inlines = [RecipeIngredientInline]

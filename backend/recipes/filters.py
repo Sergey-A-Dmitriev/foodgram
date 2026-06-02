@@ -1,5 +1,20 @@
 from django.contrib import admin
 
+from recipes.models import Tag
+
+
+class TagFilter(admin.SimpleListFilter):
+    title = 'Тег'
+    parameter_name = 'tag'
+
+    def lookups(self, request, model_admin):
+        return Tag.objects.values_list('pk', 'name')
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(tags=self.value())
+        return queryset
+
 
 class HasRelationFilter(admin.SimpleListFilter):
     """Базовый фильтр наличия связи."""
@@ -43,54 +58,61 @@ class HasFollowersFilter(HasRelationFilter):
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
+
     title = 'Время приготовления'
     parameter_name = 'cooking_time_group'
-
     CACHE_KEY = 'cooking_time_quantiles'
 
-    def get_buckets(self, queryset):
-        values = list(queryset.values_list('cooking_time', flat=True))
-        if len(values) < 3:
-            return None
-        values = sorted(values)
-        fast_threshold = values[len(values) // 3]
-        slow_threshold = values[(2 * len(values)) // 3]
-        return fast_threshold, slow_threshold
+    def _get_time_ranges(self, recipes_qs):
+        cooking_times = tuple(
+            recipes_qs.order_by('cooking_time')
+            .values_list('cooking_time', flat=True)
+            .distinct())
+        fast_threshold = (
+            cooking_times[len(cooking_times) // 3])
+        slow_threshold = (
+            cooking_times[(2 * len(cooking_times)) // 3])
+
+        return {
+            'fast': (
+                cooking_times[0],
+                fast_threshold,),
+            'medium': (
+                fast_threshold + 1,
+                slow_threshold,),
+            'slow': (
+                slow_threshold + 1,
+                cooking_times[-1],)}
 
     def lookups(self, request, model_admin):
-        recipes = model_admin.get_queryset(request)
-        quantiles = self.get_buckets(recipes)
-        if not quantiles:
-            return (
-                ('fast', 'Быстро (0)'),
-                ('medium', 'Средне (0)'),
-                ('slow', 'Долго (0)'))
-        fast_threshold, slow_threshold = quantiles
-        fast_count = recipes.filter(cooking_time__lte=fast_threshold).count()
-        medium_count = (recipes.filter(cooking_time__gt=fast_threshold,
-                                       cooking_time__lte=slow_threshold)
-                        .count())
-        slow_count = recipes.filter(cooking_time__gt=slow_threshold).count()
+        time_ranges = self._get_time_ranges(
+            model_admin.model.objects.all())
+
+        if not time_ranges:
+            return ()
 
         return (
-            ('fast', f'Быстро ({fast_count})'),
-            ('medium', f'Средне ({medium_count})'),
-            ('slow', f'Долго ({slow_count})'))
+            ('fast',
+                f'Быстрые (до {time_ranges["fast"][1]} мин)'),
+            ('medium',
+                f'Средние ({time_ranges["medium"][0]}–'
+                f'{time_ranges["medium"][1]} мин)'),
+            ('slow',
+                f'Долгие (от {time_ranges["slow"][0]} мин)'))
 
-    def queryset(self, request, queryset):
-        quantiles = self.get_buckets(queryset)
-        if not quantiles:
-            return queryset
-        fast_threshold, slow_threshold = quantiles
-        value = self.value()
-        if value == 'fast':
-            return queryset.filter(cooking_time__lte=fast_threshold)
-        if value == 'medium':
-            return queryset.filter(cooking_time__gt=fast_threshold,
-                                   cooking_time__lte=slow_threshold)
-        if value == 'slow':
-            return queryset.filter(cooking_time__gt=slow_threshold)
-        return queryset
+    def queryset(self, request, recipes_qs):
+        time_ranges = self._get_time_ranges(recipes_qs)
+
+        if not time_ranges:
+            return recipes_qs
+
+        selected_range = time_ranges.get(self.value())
+
+        if selected_range:
+            return recipes_qs.filter(
+                cooking_time__range=selected_range)
+
+        return recipes_qs
 
 
 class UsedInRecipesFilter(HasRelationFilter):

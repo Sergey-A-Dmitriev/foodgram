@@ -1,5 +1,5 @@
 from django.db.models import Sum
-from django.http import FileResponse, Http404
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,6 +20,7 @@ from api.serializers.recipes import (IngredientSerializer,
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from recipes.services.shopping_list import generate_shopping_list
+from recipes.utils import encode_id
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -142,13 +143,14 @@ class RecipeViewSet(ModelViewSet):
         url_path='get_link',
         url_name='short-link')
     def get_link(self, request, pk=None):
-        """Получение ссылки на рецепт."""
-
-        if not Recipe.objects.filter(pk=pk).exists():
-            raise Http404
-
+        """Получение сокращённой ссылки на рецепт."""
+        recipe = get_object_or_404(Recipe,
+                                   pk=pk)
+        short_code = encode_id(recipe.id)
         return Response({
             'short-link': request.build_absolute_uri(
-                reverse('recipes-detail', args=[pk])
+                reverse(
+                    'recipe-short-link',
+                    kwargs={'short_code': short_code})
             )
         })
