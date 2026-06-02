@@ -185,11 +185,11 @@ class RecipeAdmin(admin.ModelAdmin):
             f'{ri.ingredient.measurement_unit}'
             for ri in recipe.recipe_ingredients.all())
 
-    @admin.display(description='Фото')
+    @admin.display(description='Вид')
     def get_image(self, obj):
         return render_image(obj, 'image')
 
-    @admin.display(description='Фото рецепта')
+    @admin.display(description='Вид рецепта')
     def image_preview(self, obj):
         return render_image(obj, 'image')
 
