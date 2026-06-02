@@ -15,4 +15,4 @@ class ShortLinkRedirectView(RedirectView):
             Recipe,
             pk=recipe_id)
 
-        return f'/recipes/{recipe.id}/'
+        return f'/api/recipes/{recipe.id}/'
