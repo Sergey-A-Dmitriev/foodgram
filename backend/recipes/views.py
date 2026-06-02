@@ -1,18 +1,8 @@
-from django.shortcuts import get_object_or_404
-from django.views.generic import RedirectView
+from django.http import Http404, HttpResponseRedirect
 
 from recipes.models import Recipe
-from recipes.utils import decode_id
 
-
-class ShortLinkRedirectView(RedirectView):
-    permanent = False
-
-    def get_redirect_url(self, *args, **kwargs):
-        recipe_id = decode_id(kwargs['short_code'])
-
-        recipe = get_object_or_404(
-            Recipe,
-            pk=recipe_id)
-
-        return f'/recipes/{recipe.id}/'
+def short_link_redirect(request, recipe_id):
+    if not Recipe.objects.filter(pk=recipe_id).exists():
+        raise Http404('Рецепт не найден')
+    return HttpResponseRedirect(f'/recipes/{recipe_id}/')

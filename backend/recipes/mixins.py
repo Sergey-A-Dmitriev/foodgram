@@ -7,5 +7,5 @@ class RecipesCountMixin:
     list_display = ('get_recipes_count',)
 
     @admin.display(description='Рецептов')
-    def get_recipes_count(self, recipes):
-        return recipes.recipes.count()
+    def get_recipes_count(self, instance):
+        return instance.recipes.count()
