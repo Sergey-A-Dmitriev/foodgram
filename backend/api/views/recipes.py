@@ -137,10 +137,10 @@ class RecipeViewSet(ModelViewSet):
         )
 
     @action(
-    detail=True,
-    methods=['get'],
-    url_path='get_link',
-    url_name='short-link')
+        detail=True,
+        methods=['get'],
+        url_path='get_link',
+        url_name='short-link')
     def get_link(self, request, pk=None):
         """Получение короткой ссылки на рецепт."""
         if not Recipe.objects.filter(pk=pk).exists():
